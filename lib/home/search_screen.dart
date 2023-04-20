@@ -1,9 +1,11 @@
 import 'package:custom_date_range_picker/custom_date_range_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:holdit/providers/search_screen_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-import '../db/transactions_db/transaction_db_functions.dart';
 import '../db/transactions_db/transaction_model.dart';
+import '../providers/transaction_db_functions.dart';
 import 'update_transaction.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,22 +16,18 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // Variables for date range
-  DateTime? startDate;
-  DateTime? endDate;
-  // dropdownbutton items
-  List<String> searchTransactionTypeItems = ["All", "Expenses", "Income"];
-
-  List<TransactionModel> totalTransactionList =
-      TransactionDB.instance.transactionListNotifier.value;
-  ValueNotifier<String> selectedTransactionType = ValueNotifier('All');
-  ValueNotifier<List<TransactionModel>> outputList = ValueNotifier([]);
   TextEditingController searchTextController = TextEditingController();
-  String query = '';
 
   @override
   void initState() {
-    outputList.value = totalTransactionList;
+    context.read<SearchScreenProvider>().outputList =
+        context.read<TransactionDBProvider>().transactionListNotifier;
+    context.read<SearchScreenProvider>().selectedTransactionType = 'All';
+    context.read<SearchScreenProvider>().outputList = [];
+    context.read<SearchScreenProvider>().query = "";
+    context.read<SearchScreenProvider>().startDate = null;
+    context.read<SearchScreenProvider>().endDate = null;
+
     super.initState();
   }
 
@@ -49,31 +47,40 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.all(10.0),
             child: Container(
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: const Color(0xDFE0E0E0)),
+                borderRadius: BorderRadius.circular(20),
+                color: const Color(0xDFE0E0E0),
+              ),
               child: DropdownButtonHideUnderline(
-                  child: ButtonTheme(
-                      height: 10,
-                      alignedDropdown: true,
-                      child: DropdownButton(
-                          borderRadius: BorderRadius.circular(20),
-                          iconSize: 20,
-                          value: selectedTransactionType.value,
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.black),
-                          icon: const Icon(Icons.keyboard_arrow_down),
-                          items: searchTransactionTypeItems.map((String items) {
-                            return DropdownMenuItem(
-                              value: items,
-                              child: Text(items),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedTransactionType.value = newValue!;
-                              selectedTransactionType.notifyListeners();
-                            });
-                          }))),
+                child: ButtonTheme(
+                  height: 10,
+                  alignedDropdown: true,
+                  child: DropdownButton(
+                    borderRadius: BorderRadius.circular(20),
+                    iconSize: 20,
+                    value: context
+                        .watch<SearchScreenProvider>()
+                        .selectedTransactionType,
+                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    items: context
+                        .watch<SearchScreenProvider>()
+                        .searchTransactionTypeItems
+                        .map(
+                      (String items) {
+                        return DropdownMenuItem(
+                          value: items,
+                          child: Text(items),
+                        );
+                      },
+                    ).toList(),
+                    onChanged: (String? newValue) {
+                      context
+                          .read<SearchScreenProvider>()
+                          .onTransactionTypeChanged(newValue!);
+                    },
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -99,9 +106,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         hintText: 'Search for transactions',
                         suffixIcon: Icon(Icons.search),
                       ),
-                      onChanged: (value) => setState(() {
-                        query = value;
-                      }),
+                      onChanged: (value) => context
+                          .read<SearchScreenProvider>()
+                          .searchQuerychanged(value),
                     ),
                   ),
                 ),
@@ -109,159 +116,179 @@ class _SearchScreenState extends State<SearchScreen> {
               const SizedBox(
                 height: 20,
               ),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.blue, width: 2)),
-                onPressed: () {
-                  showCustomDateRangePicker(
-                    context,
-                    dismissible: true,
-                    minimumDate: DateTime(2010),
-                    maximumDate: DateTime.now(),
-                    endDate: endDate,
-                    startDate: startDate,
-                    onApplyClick: (start, end) {
-                      setState(() {
-                        endDate = end;
-                        startDate = start;
-                      });
-                    },
-                    onCancelClick: () {
-                      setState(() {
-                        endDate = null;
-                        startDate = null;
-                      });
-                    },
-                  );
-                },
-                child: startDate == null
-                    ? const Text(
-                        "Choose a date range",
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    : Text(
-                        style: const TextStyle(color: Colors.grey),
-                        '${startDate != null ? DateFormat("dd/MMM/yyyy").format(startDate!) : '-'} - ${endDate != null ? DateFormat("dd/MMM/yyyy").format(endDate!) : '-'}',
-                      ),
-              ),
-              ValueListenableBuilder(
-                  valueListenable: selectedTransactionType,
-                  builder: (context, selectedType, _) {
-                    List<TransactionModel> filteredList =
-                        totalTransactionList.where((element) {
-                      bool matchesQuery = element.category!.name
-                              .trim()
-                              .toLowerCase()
-                              .contains(query.trim().toLowerCase()) ||
-                          element.description
-                              .trim()
-                              .toLowerCase()
-                              .contains(query.trim().toLowerCase());
-
-                      if (selectedType == searchTransactionTypeItems[0]) {
-                        return matchesQuery;
-                      } else if (selectedType ==
-                          searchTransactionTypeItems[1]) {
-                        return element.isExpense == true && matchesQuery;
-                      } else {
-                        return element.isExpense == false && matchesQuery;
-                      }
-                    }).toList();
-
-                    if (startDate != null && endDate != null) {
-                      filteredList = filteredList
-                          .where((element) =>
-                              element.date.isBefore(
-                                  endDate!.add(const Duration(days: 1))) &&
-                              element.date.isAfter(
-                                  startDate!.subtract(const Duration(days: 1))))
-                          .toList();
-                    }
-
-                    outputList.value = filteredList;
-                    outputList.notifyListeners();
-
-                    if (outputList.value.isEmpty) {
-                      return Center(
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              "assets/search_result-null.gif",
-                              height: MediaQuery.of(context).size.width * 0.6,
-                            ),
-                            const Text("No data found")
-                          ],
+              Consumer<SearchScreenProvider>(
+                builder: (context, dateRangePickerProvider, child) =>
+                    OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.blue, width: 2)),
+                  onPressed: () {
+                    showCustomDateRangePicker(
+                      context,
+                      dismissible: true,
+                      minimumDate: DateTime(2010),
+                      maximumDate: DateTime.now(),
+                      endDate: dateRangePickerProvider.endDate,
+                      startDate: dateRangePickerProvider.startDate,
+                      onApplyClick: (start, end) {
+                        dateRangePickerProvider.dateRangePicker(start, end);
+                      },
+                      onCancelClick: () {
+                        dateRangePickerProvider.cancelDateRange();
+                      },
+                    );
+                  },
+                  child: dateRangePickerProvider.startDate == null
+                      ? const Text(
+                          "Choose a date range",
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      : Text(
+                          style: const TextStyle(color: Colors.grey),
+                          '${dateRangePickerProvider.startDate != null ? DateFormat("dd/MMM/yyyy").format(dateRangePickerProvider.startDate!) : '-'} - ${dateRangePickerProvider.endDate != null ? DateFormat("dd/MMM/yyyy").format(dateRangePickerProvider.endDate!) : '-'}',
                         ),
-                      );
+                ),
+              ),
+              Consumer<SearchScreenProvider>(
+                builder: (context, selectedTypeProvider, _) {
+                  final selectedType =
+                      selectedTypeProvider.selectedTransactionType;
+                  List<TransactionModel> filteredList = context
+                      .watch<TransactionDBProvider>()
+                      .transactionListNotifier
+                      .where((element) {
+                    bool matchesQuery = element.category!.name
+                            .trim()
+                            .toLowerCase()
+                            .contains(context
+                                .watch<SearchScreenProvider>()
+                                .query
+                                .trim()
+                                .toLowerCase()) ||
+                        element.description.trim().toLowerCase().contains(
+                            context
+                                .watch<SearchScreenProvider>()
+                                .query
+                                .trim()
+                                .toLowerCase());
+
+                    if (selectedType ==
+                        selectedTypeProvider.searchTransactionTypeItems[0]) {
+                      return matchesQuery;
+                    } else if (selectedType ==
+                        selectedTypeProvider.searchTransactionTypeItems[1]) {
+                      return element.isExpense == true && matchesQuery;
                     } else {
-                      return ValueListenableBuilder(
-                          valueListenable: outputList,
-                          builder:
-                              (context, List<TransactionModel> newList, _) {
-                            return ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: outputList.value.length,
-                                itemBuilder: (context, index) {
-                                  TransactionModel value = newList[index];
-                                  return ListTile(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  UpdateScreen(
-                                                      id: value.id,
-                                                      selectedValue:
-                                                          value.isExpense
-                                                              ? "Expense"
-                                                              : "Income",
-                                                      selectedDate: value.date,
-                                                      selectedCategory:
-                                                          value.category!,
-                                                      selectedAmount:
-                                                          value.amount,
-                                                      selectedDescription:
-                                                          value.description)),
-                                        );
-                                      },
-                                      leading: Stack(children: [
-                                        CircleAvatar(
-                                          backgroundColor:
-                                              value.category!.color,
-                                        ),
-                                        Positioned.fill(
-                                            child: Icon(value.category!.icon))
-                                      ]),
-                                      title: Text(value.description),
-                                      subtitle: Text(value.category!.name),
-                                      trailing: value.isExpense
-                                          ? Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  "- ₹ ${value.amount}",
-                                                  style: const TextStyle(
-                                                      color: Colors.red),
-                                                ),
-                                                Text(DateFormat("dd/MMM/yyyy")
-                                                    .format(value.date))
-                                              ],
-                                            )
-                                          : Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text("+ ₹ ${value.amount}"),
-                                                Text(DateFormat("dd/MMM/yyyy")
-                                                    .format(value.date))
-                                              ],
-                                            ));
-                                });
-                          });
+                      return element.isExpense == false && matchesQuery;
                     }
-                  })
+                  }).toList();
+                  if (context.watch<SearchScreenProvider>().startDate != null &&
+                      context.watch<SearchScreenProvider>().endDate != null) {
+                    filteredList = filteredList
+                        .where(
+                          (element) =>
+                              element.date.isBefore(
+                                context
+                                    .watch<SearchScreenProvider>()
+                                    .endDate!
+                                    .add(
+                                      const Duration(days: 1),
+                                    ),
+                              ) &&
+                              element.date.isAfter(
+                                context
+                                    .watch<SearchScreenProvider>()
+                                    .startDate!
+                                    .subtract(
+                                      const Duration(days: 1),
+                                    ),
+                              ),
+                        )
+                        .toList();
+                  }
+                  filteredList.sort((latest, oldest) =>
+                      oldest.date.compareTo(latest.date)); // Sort by date
+                  selectedTypeProvider.outputList = filteredList;
+                  if (selectedTypeProvider.outputList.isEmpty) {
+                    return Center(
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            "assets/search_result-null.gif",
+                            height: MediaQuery.of(context).size.width * 0.6,
+                          ),
+                          const Text("No data found")
+                        ],
+                      ),
+                    );
+                  } else {
+                    return Consumer<SearchScreenProvider>(
+                      builder: (context, newListProvider, _) {
+                        final newList = newListProvider.outputList;
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: newList.length,
+                          itemBuilder: (context, index) {
+                            TransactionModel value = newList[index];
+                            return ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => UpdateScreen(
+                                        id: value.id,
+                                        selectedValue: value.isExpense
+                                            ? "Expense"
+                                            : "Income",
+                                        selectedDate: value.date,
+                                        selectedCategory: value.category!,
+                                        selectedAmount: value.amount,
+                                        selectedDescription: value.description),
+                                  ),
+                                );
+                              },
+                              leading: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: value.category!.color,
+                                  ),
+                                  Positioned.fill(
+                                      child: Icon(value.category!.icon))
+                                ],
+                              ),
+                              title: Text(value.description),
+                              subtitle: Text(value.category!.name),
+                              trailing: value.isExpense
+                                  ? Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "- ₹ ${value.amount}",
+                                          style: const TextStyle(
+                                              color: Colors.red),
+                                        ),
+                                        Text(DateFormat("dd/MMM/yyyy")
+                                            .format(value.date))
+                                      ],
+                                    )
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text("+ ₹ ${value.amount}"),
+                                        Text(DateFormat("dd/MMM/yyyy")
+                                            .format(value.date))
+                                      ],
+                                    ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  }
+                },
+              )
             ],
           ),
         ),

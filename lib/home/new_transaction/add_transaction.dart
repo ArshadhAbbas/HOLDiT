@@ -1,27 +1,22 @@
-
-
 import 'package:flutter/material.dart';
-import 'package:holdit/home/new_transaction/screen/add_item_screen.dart';
+import 'package:provider/provider.dart';
 
 import '../../common_widgets/add_new_category.dart';
-import '../../common_widgets/category_selection_dropdown.dart';
-import '../../db/transactions_db/transaction_db_functions.dart';
+import '../../common_widgets/category_selection_Dropdown.dart';
 import '../../db/transactions_db/transaction_model.dart';
+import '../../providers/add_item_screen_provider.dart';
+import '../../providers/transaction_db_functions.dart';
 
-List<String> selectExpenseOrIncome = <String>['Expense', 'Income'];
-class AddTransaction extends StatefulWidget {
-  const AddTransaction({required this.isExpense, Key? key}) : super(key: key);
- final bool isExpense;
+class AddTransaction extends StatelessWidget {
+  AddTransaction({required this.isExpense, Key? key}) : super(key: key);
+  final bool isExpense;
 
-  @override
-  State<AddTransaction> createState() => _AddTransactionState();
-}
-
-class _AddTransactionState extends State<AddTransaction> {
   final amountTextController = TextEditingController();
+
   final descriptionTextController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -35,7 +30,7 @@ class _AddTransactionState extends State<AddTransaction> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                widget.isExpense
+                isExpense
                     ? ExpenseCategoryDropDown()
                     : IncomeCategoryDropDown(),
                 Align(
@@ -89,7 +84,7 @@ class _AddTransactionState extends State<AddTransaction> {
               child: ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    addTransaction();
+                    addNewTransaction(context);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("New Transaction Added"),
                       duration: Duration(seconds: 1),
@@ -102,7 +97,7 @@ class _AddTransactionState extends State<AddTransaction> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20))),
                 child: const Padding(
-                  padding:  EdgeInsets.all(20.0),
+                  padding: EdgeInsets.all(20.0),
                   child: Text("Add Transaction"),
                 ),
               ),
@@ -111,20 +106,20 @@ class _AddTransactionState extends State<AddTransaction> {
         ));
   }
 
-  Future addTransaction() async {
+  Future addNewTransaction(BuildContext context) async {
     final amount = double.parse(amountTextController.text);
     final description = descriptionTextController.text;
 
     final model = TransactionModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        date: AddItemsScreen.instance.selectedDate,
-        isExpense: widget.isExpense,
-        category: selectedCategoryModel!,
+        date: context.read<AddItemsScreenProvider>().selectedDate!,
+        isExpense: isExpense,
+        category: selectedCategoryModel,
         amount: amount,
         description: description.trim());
 
-    TransactionDB.instance.addTransactions(model);
-    TransactionDB.instance.refresh();
+    context.read<TransactionDBProvider>().addTransactions(model);
+    context.read<TransactionDBProvider>().refresh();
   }
 }
 
@@ -132,7 +127,7 @@ void showCategoryDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return const AddCategoryDialogue();
+      return AddCategoryDialogue();
     },
   );
 }

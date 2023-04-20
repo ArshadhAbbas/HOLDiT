@@ -1,24 +1,29 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:holdit/providers/add_new_category_provider.dart';
+import 'package:provider/provider.dart';
 
 import '../db/category_db/category_db_functions.dart';
 import '../db/category_db/category_db_model.dart';
 
 class AddCategoryDialogue extends StatefulWidget {
-  const AddCategoryDialogue({Key? key}) : super(key: key);
+  AddCategoryDialogue({Key? key}) : super(key: key);
 
   @override
-  AddCategoryDialogueState createState() => AddCategoryDialogueState();
+  State<AddCategoryDialogue> createState() => _AddCategoryDialogueState();
 }
 
-class AddCategoryDialogueState extends State<AddCategoryDialogue> {
+class _AddCategoryDialogueState extends State<AddCategoryDialogue> {
   final _formKey = GlobalKey<FormState>();
-  IconData selectedIcon = Icons.gas_meter_outlined;
-  Color selectedColor = Colors.blue;
-  String itemName = '';
-  int? radioVal = 1;
+  @override
+  void initState() {
+    super.initState();
+    context.read<AddNewcategoryProvider>().itemName = "";
+    context.read<AddNewcategoryProvider>().radioVal = 1;
+    context.read<AddNewcategoryProvider>().selectedColor = Colors.blue;
+    context.read<AddNewcategoryProvider>().selectedIcon =
+        Icons.gas_meter_outlined;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,37 +34,35 @@ class AddCategoryDialogueState extends State<AddCategoryDialogue> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Radio(
-                    activeColor: const Color.fromARGB(255, 102, 97, 97),
-                    value: 1,
-                    groupValue: radioVal,
-                    onChanged: (value) {
-                      setState(() {
-                        radioVal = value;
-                      });
-                    }),
-                const Text(
-                  "Expense",
-                  style: TextStyle(color: Color.fromARGB(255, 80, 76, 76)),
-                ),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.1,
-                ),
-                Radio(
-                    activeColor: const Color.fromARGB(255, 102, 97, 97),
-                    value: 2,
-                    groupValue: radioVal,
-                    onChanged: (value) {
-                      setState(() {
-                        radioVal = value;
-                      });
-                    }),
-                const Text("Income",
-                    style: TextStyle(color: Color.fromARGB(255, 80, 76, 76))),
-              ],
+            Consumer<AddNewcategoryProvider>(
+              builder: (context, radioProvider, child) => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Radio(
+                      activeColor: const Color.fromARGB(255, 102, 97, 97),
+                      value: 1,
+                      groupValue: radioProvider.radioVal,
+                      onChanged: (value) {
+                        radioProvider.changeRadioValue(value);
+                      }),
+                  const Text(
+                    "Expense",
+                    style: TextStyle(color: Color.fromARGB(255, 80, 76, 76)),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.1,
+                  ),
+                  Radio(
+                      activeColor: const Color.fromARGB(255, 102, 97, 97),
+                      value: 2,
+                      groupValue: radioProvider.radioVal,
+                      onChanged: (value) {
+                        radioProvider.changeRadioValue(value);
+                      }),
+                  const Text("Income",
+                      style: TextStyle(color: Color.fromARGB(255, 80, 76, 76))),
+                ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -73,37 +76,38 @@ class AddCategoryDialogueState extends State<AddCategoryDialogue> {
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.2,
-                  child: DropdownButtonFormField<IconData>(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                  child: Consumer<AddNewcategoryProvider>(
+                    builder: (context, iconProvider, child) =>
+                        DropdownButtonFormField<IconData>(
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
+                      value: iconProvider.selectedIcon,
+                      onChanged: (IconData? newValue) {
+                        iconProvider.changeIcon(newValue);
+                      },
+                      items: <IconData>[
+                        Icons.gas_meter_outlined,
+                        Icons.work_outlined,
+                        Icons.abc,
+                        Icons.ac_unit,
+                        Icons.account_balance_outlined,
+                        Icons.zoom_out_map_sharp,
+                        Icons.home_max_outlined,
+                        Icons.build,
+                        Icons.local_post_office_outlined,
+                        Icons.star_outline_sharp,
+                        Icons.account_tree_outlined,
+                        Icons.wind_power_sharp,
+                        Icons.done_outline_sharp,
+                        Icons.emoji_emotions_outlined
+                      ].map<DropdownMenuItem<IconData>>((IconData value) {
+                        return DropdownMenuItem<IconData>(
+                          value: value,
+                          child: Icon(value),
+                        );
+                      }).toList(),
                     ),
-                    value: selectedIcon,
-                    onChanged: (IconData? newValue) {
-                      setState(() {
-                        selectedIcon = newValue!;
-                      });
-                    },
-                    items: <IconData>[
-                      Icons.gas_meter_outlined,
-                      Icons.work_outlined,
-                      Icons.abc,
-                      Icons.ac_unit,
-                      Icons.account_balance_outlined,
-                      Icons.zoom_out_map_sharp,
-                      Icons.home_max_outlined,
-                      Icons.build,
-                      Icons.local_post_office_outlined,
-                      Icons.star_outline_sharp,
-                      Icons.account_tree_outlined,
-                      Icons.wind_power_sharp,
-                      Icons.done_outline_sharp,
-                      Icons.emoji_emotions_outlined
-                    ].map<DropdownMenuItem<IconData>>((IconData value) {
-                      return DropdownMenuItem<IconData>(
-                        value: value,
-                        child: Icon(value),
-                      );
-                    }).toList(),
                   ),
                 ),
               ],
@@ -121,65 +125,69 @@ class AddCategoryDialogueState extends State<AddCategoryDialogue> {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.03,
                 ),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Pick a color'),
-                          content: SingleChildScrollView(
-                            child: ColorPicker(
-                              pickerColor: selectedColor,
-                              onColorChanged: (color) {
-                                setState(() => selectedColor = color);
-                              },
-                              pickerAreaHeightPercent: 0.5,
+                Consumer<AddNewcategoryProvider>(
+                  builder: (context, colorProvider, child) => GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Pick a color'),
+                            content: SingleChildScrollView(
+                              child: ColorPicker(
+                                pickerColor: colorProvider.selectedColor!,
+                                onColorChanged: (color) {
+                                  colorProvider.changeColor(color);
+                                },
+                                pickerAreaHeightPercent: 0.5,
+                              ),
                             ),
-                          ),
-                          actions: <Widget>[
-                            ElevatedButton(
-                              child: const Text('OK'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: const Color.fromARGB(255, 155, 146, 146),
+                            actions: <Widget>[
+                              ElevatedButton(
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                     child: CircleAvatar(
-                      backgroundColor: selectedColor,
-                      radius: 28,
-                      child: Icon(
-                        selectedIcon,
-                        color: Colors.white,
-                        size: 30,
+                      radius: 30,
+                      backgroundColor: const Color.fromARGB(255, 155, 146, 146),
+                      child: CircleAvatar(
+                        backgroundColor: colorProvider.selectedColor,
+                        radius: 28,
+                        child: Icon(
+                          context.watch<AddNewcategoryProvider>().selectedIcon,
+                          color: Colors.white,
+                          size: 30,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-             SizedBox(height: MediaQuery.of(context).size.width * 0.03,),
-            TextFormField(
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return "Enter Category Name";
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                  hintText: 'Item Name', border: OutlineInputBorder()),
-              onChanged: (value) {
-                setState(() {
-                  itemName = value;
-                });
-              },
+            SizedBox(
+              height: MediaQuery.of(context).size.width * 0.03,
+            ),
+            Consumer<AddNewcategoryProvider>(
+              builder: (context, itemNameProvider, child) => TextFormField(
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Enter Category Name";
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                    hintText: 'Item Name', border: OutlineInputBorder()),
+                onChanged: (value) {
+                  itemNameProvider.changeItemName(value);
+                },
+              ),
             ),
           ],
         ),
@@ -194,11 +202,13 @@ class AddCategoryDialogueState extends State<AddCategoryDialogue> {
             onPressed: () {
               if (_formKey.currentState!.validate()) {
                 final category = CategoryModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: itemName,
-                    icon: selectedIcon,
-                    color: selectedColor,
-                    isExpense: radioVal == 1);
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  name: context.read<AddNewcategoryProvider>().itemName!,
+                  icon: context.read<AddNewcategoryProvider>().selectedIcon!,
+                  color: context.read<AddNewcategoryProvider>().selectedColor!,
+                  isExpense:
+                      context.read<AddNewcategoryProvider>().radioVal == 1,
+                );
                 CategoryDB.instance.insertCategory(category);
 
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(

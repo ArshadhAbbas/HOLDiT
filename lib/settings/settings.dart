@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_share/flutter_share.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:holdit/bottom_navbar/three_in_one.dart';
 import 'package:timer_button_fork/timer_button_fork.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_share/flutter_share.dart';
+
 import '../db/category_db/category_db_functions.dart';
 import 'about.dart';
 import 'faq.dart';
@@ -21,7 +23,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await FlutterShare.share(
         title: ' HOLDiT',
         text: 'HOLDiT : Balancing your money',
-        linkUrl: 'https://play.google.com/store/apps/details?id=in.narrow.holdit');
+        linkUrl:
+            'https://play.google.com/store/apps/details?id=in.narrow.holdit');
   }
 
   @override
@@ -99,13 +102,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              // scrollable: true,
-              title:Column(
+              title: Column(
                 children: [
                   const Text("Clear?!"),
-                  Image.asset("assets/Warning.gif",height: MediaQuery.of(context).size.width*0.3,),
+                  Image.asset(
+                    "assets/Warning.gif",
+                    height: MediaQuery.of(context).size.width * 0.3,
+                  ),
                 ],
-              ), 
+              ),
               content: const Text(
                 'This will remove all user Data and this action cannot be undone',
                 textAlign: TextAlign.center,
@@ -161,7 +166,7 @@ Future<void> dataCleared(BuildContext context) async {
     behavior: SnackBarBehavior.floating,
   ));
   Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (context) => const ThreeInOne()), ModalRoute.withName('')
-  );
+      context,
+      MaterialPageRoute(builder: (context) => ThreeInOne()),
+      ModalRoute.withName(''));
 }

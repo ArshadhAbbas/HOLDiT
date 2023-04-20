@@ -1,19 +1,12 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:holdit/home/new_transaction/screen/add_item_screen.dart';
 import 'package:holdit/home/search_screen.dart';
 import 'package:holdit/home/total_income_balance_card.dart';
 import 'package:holdit/home/transactions_list.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -47,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const SearchScreen()),
+                          builder: (context) =>  SearchScreen()),
                     );
                   },
                   icon: const Icon(Icons.search,

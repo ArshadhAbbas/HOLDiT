@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:holdit/providers/add_item_screen_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../add_transaction.dart';
 
+List<String> selectExpenseOrIncome = <String>['Expense', 'Income'];
+
 class AddItemsScreen extends StatefulWidget {
-  DateTime selectedDate = DateTime.now();
-  String selectedValue = 'Expense';
-  AddItemsScreen.internal({super.key});
-  static AddItemsScreen instance = AddItemsScreen.internal();
-  factory AddItemsScreen() {
-    return instance;
-  }
+  const AddItemsScreen({super.key});
 
   @override
   State<AddItemsScreen> createState() => _AddItemsScreenState();
@@ -19,8 +17,8 @@ class AddItemsScreen extends StatefulWidget {
 class _AddItemsScreenState extends State<AddItemsScreen> {
   @override
   void initState() {
-    AddItemsScreen.instance.selectedDate = DateTime.now();
-    AddItemsScreen.instance.selectedValue = 'Expense';
+    context.read<AddItemsScreenProvider>().selectedDate = DateTime.now();
+    context.read<AddItemsScreenProvider>().selectedValue = 'Expense';
     super.initState();
   }
 
@@ -43,72 +41,67 @@ class _AddItemsScreenState extends State<AddItemsScreen> {
             Form(
               child: Column(
                 children: [
-                  SizedBox(
-                    width: 200,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime.now())
-                            .then((date) {
-                          if (date != null) {
-                            setState(() {
-                              AddItemsScreen.instance.selectedDate = date;
-                            });
-                          }
-                        });
-                      },
-                      icon: const Padding(
-                        padding: EdgeInsets.only(left: 2.0),
-                        child: Center(
-                            child: Icon(
-                          Icons.edit_calendar_outlined,
-                          size: 20,
-                          color: Color.fromARGB(255, 136, 128, 128),
-                        )),
-                      ),
-                      label: Center(
-                          child: Padding(
-                        padding: const EdgeInsets.only(right: 2.0),
-                        child: Text(
-                          DateFormat("dd,MMMM,yyyy")
-                              .format(AddItemsScreen.instance.selectedDate),
-                          style: const TextStyle(color: Colors.black),
+                  Consumer<AddItemsScreenProvider>(
+                    builder: (context, datePickerProvider, child) => SizedBox(
+                      width: 200,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          datePickerProvider.datePicker(context);
+                        },
+                        icon: const Padding(
+                          padding: EdgeInsets.only(left: 2.0),
+                          child: Center(
+                              child: Icon(
+                            Icons.edit_calendar_outlined,
+                            size: 20,
+                            color: Color.fromARGB(255, 136, 128, 128),
+                          )),
                         ),
-                      )),
-                      style: OutlinedButton.styleFrom(
+                        label: Center(
+                            child: Padding(
+                          padding: const EdgeInsets.only(right: 2.0),
+                          child: Text(
+                            DateFormat("dd,MMMM,yyyy")
+                                .format(datePickerProvider.selectedDate!),
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        )),
+                        style: OutlinedButton.styleFrom(
                           backgroundColor: const Color(0xDFE0E0E0),
                           side: BorderSide.none,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0))),
+                            borderRadius: BorderRadius.circular(30.0),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  DropdownButtonFormField(
-                    value: AddItemsScreen.instance.selectedValue,
-                    items: selectExpenseOrIncome.map((item) {
-                      return DropdownMenuItem(
-                        value: item,
-                        child: Text(item),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        AddItemsScreen.instance.selectedValue =
-                            value.toString();
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
+                  Consumer<AddItemsScreenProvider>(
+                    builder: (context, categoryTypeProvider, child) =>
+                        DropdownButtonFormField(
+                      value: categoryTypeProvider.selectedValue,
+                      items: selectExpenseOrIncome.map((item) {
+                        return DropdownMenuItem(
+                          value: item,
+                          child: Text(item),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        categoryTypeProvider.categoryTypeDropdown(value!);
+                      },
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
                   Container(
-                    child: (AddItemsScreen.instance.selectedValue == "Expense")
-                        ? const AddTransaction(
-                            isExpense: true,
-                          )
-                        : const AddTransaction(isExpense: false),
+                    child:
+                        (context.watch<AddItemsScreenProvider>().selectedValue ==
+                                "Expense")
+                            ? AddTransaction(
+                                isExpense: true,
+                              )
+                            : AddTransaction(isExpense: false),
                   )
                 ],
               ),

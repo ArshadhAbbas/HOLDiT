@@ -3,7 +3,7 @@ import '../common_widgets/month_picker.dart';
 import 'radio_buttons.dart';
 
 class ReportScreen extends StatefulWidget {
-  ReportScreen({super.key});
+  const ReportScreen({super.key});
 
   @override
   State<ReportScreen> createState() => _ReportScreenState();
@@ -27,7 +27,7 @@ class _ReportScreenState extends State<ReportScreen> {
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: const [
               MonthPicker(),
               RadioButtons(),
             ],

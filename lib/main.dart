@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:holdit/providers/add_item_screen_provider.dart';
+import 'package:holdit/providers/add_new_category_provider.dart';
+import 'package:holdit/providers/bottom_nav_bar_provider.dart';
+import 'package:holdit/providers/category_selection_dropdown_provider.dart';
+import 'package:holdit/providers/faq_provider.dart';
+import 'package:holdit/providers/month_picker_provider.dart';
+import 'package:holdit/providers/radio_button_provider.dart';
+import 'package:holdit/providers/search_screen_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'providers/transaction_db_functions.dart';
 import 'splash/splash_screen.dart';
 import 'db/category_db/category_db_functions.dart';
 import 'db/category_db/category_db_model.dart';
 import 'db/transactions_db/transaction_model.dart';
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +45,40 @@ class Holdit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => BottomNavigationBarProvider(),
         ),
-        home: const SplashScreen());
+        ChangeNotifierProvider(
+          create: (context) => AddNewcategoryProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => MonthPickerProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => AddItemsScreenProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SearchScreenProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CategorySelectionDropdownProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => RadioButtonsProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => FAQProvider(),
+        ),
+        ChangeNotifierProvider(create: (context) => TransactionDBProvider(),)
+      ],
+      child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          ),
+          home: const SplashScreen()),
+    );
   }
 }

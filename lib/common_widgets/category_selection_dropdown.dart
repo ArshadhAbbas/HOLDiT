@@ -1,44 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../db/category_db/category_db_functions.dart';
 import '../db/category_db/category_db_model.dart';
+import '../providers/category_selection_dropdown_provider.dart';
 import 'categories_list_style.dart';
-
 
 // Income categories dropdown list
 
 class IncomeCategoryDropDown extends StatefulWidget {
-  String? selectedIncomeItem;
-
-  IncomeCategoryDropDown.internal({super.key});
-  static IncomeCategoryDropDown instance = IncomeCategoryDropDown.internal();
-  factory IncomeCategoryDropDown() {
-    return instance;
-  }
+  const IncomeCategoryDropDown({super.key});
 
   @override
   IncomeDropDownState createState() => IncomeDropDownState();
 }
 
 class IncomeDropDownState extends State<IncomeCategoryDropDown> {
-  List<DropdownMenuItem<String>> catitems = [];
+  // List<DropdownMenuItem<String>> catitems = [];
 
   @override
   void initState() {
     super.initState();
-    IncomeCategoryDropDown.instance.selectedIncomeItem = null;
+    context.read<CategorySelectionDropdownProvider>().selectedIncomeItem = null;
     loadInitialCategories();
   }
 
   Future<void> loadInitialCategories() async {
     final catItems = await CategoryLoader.loadCategories(
       isExpense: false,
-      selectedCategory: IncomeCategoryDropDown.instance.selectedIncomeItem,
+      selectedCategory: context.read<CategorySelectionDropdownProvider>().selectedIncomeItem,
       context: context,
     );
-    setState(() {
-      catitems = catItems;
-    });
+    context
+        .read<CategorySelectionDropdownProvider>()
+        .addToIncomeCategoryList(catItems);
   }
 
   @override
@@ -58,12 +53,12 @@ class IncomeDropDownState extends State<IncomeCategoryDropDown> {
             hintText: "Select Category",
             border: OutlineInputBorder(),
           ),
-          items: catitems,
-          value: IncomeCategoryDropDown.instance.selectedIncomeItem,
+          items: context
+              .watch<CategorySelectionDropdownProvider>()
+              .incomeCatitemsList,
+          value: context.watch<CategorySelectionDropdownProvider>().selectedIncomeItem,
           onChanged: (value) {
-            setState(() {
-              IncomeCategoryDropDown.instance.selectedIncomeItem = value;
-            });
+            context.read<CategorySelectionDropdownProvider>().selectIncomeCategory(value!);
           },
         ),
       ),
@@ -74,22 +69,16 @@ class IncomeDropDownState extends State<IncomeCategoryDropDown> {
 // Expense categories dropdown list
 
 class ExpenseCategoryDropDown extends StatefulWidget {
-  String? selectedExpenseItem;
+  const ExpenseCategoryDropDown({super.key});
 
-  ExpenseCategoryDropDown.internal({super.key});
-  static ExpenseCategoryDropDown instance = ExpenseCategoryDropDown.internal();
-  factory ExpenseCategoryDropDown() {
-    return instance;
-  }
   @override
   ExpenseDropDownState createState() => ExpenseDropDownState();
 }
 
 class ExpenseDropDownState extends State<ExpenseCategoryDropDown> {
-  List<DropdownMenuItem<String>> catitems = [];
   @override
   void initState() {
-    ExpenseCategoryDropDown.instance.selectedExpenseItem = null;
+    context.read<CategorySelectionDropdownProvider>().selectedExpenseItem = null;
     super.initState();
     loadInitialCategories();
   }
@@ -97,12 +86,12 @@ class ExpenseDropDownState extends State<ExpenseCategoryDropDown> {
   Future<void> loadInitialCategories() async {
     final catItems = await CategoryLoader.loadCategories(
       isExpense: true,
-      selectedCategory: ExpenseCategoryDropDown.instance.selectedExpenseItem,
+      selectedCategory: context.read<CategorySelectionDropdownProvider>().selectedExpenseItem,
       context: context,
     );
-    setState(() {
-      catitems = catItems;
-    });
+    context
+        .read<CategorySelectionDropdownProvider>()
+        .addToExpenseCategoryList(catItems);
   }
 
   @override
@@ -126,13 +115,12 @@ class ExpenseDropDownState extends State<ExpenseCategoryDropDown> {
                     hintText: "Select Category",
                     border: OutlineInputBorder(),
                   ),
-                  items: catitems,
-                  value: ExpenseCategoryDropDown.instance.selectedExpenseItem,
+                  items: context
+                      .watch<CategorySelectionDropdownProvider>()
+                      .expenseCatitemsList,
+                  value: context.watch<CategorySelectionDropdownProvider>().selectedExpenseItem,
                   onChanged: (value) {
-                    setState(() {
-                      ExpenseCategoryDropDown.instance.selectedExpenseItem =
-                          value;
-                    });
+                    context.read<CategorySelectionDropdownProvider>().selectExpenseCategory(value!);
                   },
                 ),
               ),

@@ -1,21 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../db/transactions_db/transaction_db_functions.dart';
-import '../db/transactions_db/transaction_model.dart';
+import '../providers/transaction_db_functions.dart';
 
-
-class IncomeExpenseCard extends StatefulWidget {
+class IncomeExpenseCard extends StatelessWidget {
   const IncomeExpenseCard({super.key});
-
-  @override
-  State<IncomeExpenseCard> createState() => _IncomeExpenseCardState();
-}
-
-class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +20,13 @@ class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
           padding: const EdgeInsets.symmetric(
             horizontal: 20,
           ),
-          child: ValueListenableBuilder<List<TransactionModel>>(
-            valueListenable: TransactionDB.instance.transactionListNotifier,
-            builder: (BuildContext context, List<TransactionModel> transactions,
+          child: Consumer<TransactionDBProvider>(
+            // valueListenable: TransactionDB.instance.transactionListNotifier,
+            builder: (BuildContext context,transactionsDBProvider,
                 Widget? _) {
               double expenses = 0;
               double income = 0;
+              final transactions=transactionsDBProvider.transactionListNotifier;
               for (var transaction in transactions) {
                 if (transaction.isExpense == true) {
                   expenses += transaction.amount;
@@ -65,7 +55,6 @@ class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                           textAlign: TextAlign.center,
-                          
                         ),
                       ),
                       const Text(
@@ -93,7 +82,6 @@ class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                           textAlign: TextAlign.center,
-                          
                         ),
                       ),
                       const Text(
@@ -121,7 +109,6 @@ class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
                               fontSize: 16,
                               fontWeight: FontWeight.w500),
                           textAlign: TextAlign.center,
-                         
                         ),
                       ),
                       const Text(
@@ -142,6 +129,4 @@ class _IncomeExpenseCardState extends State<IncomeExpenseCard> {
   }
 }
 
-Future<List<TransactionModel>> getTransactions() async {
-  return await TransactionDB.instance.getAllTransactions();
-}
+

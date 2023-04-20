@@ -1,48 +1,29 @@
-
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../home/home.dart';
+import '../providers/bottom_nav_bar_provider.dart';
 import '../report/report.dart';
 import '../settings/settings.dart';
 
-class ThreeInOne extends StatefulWidget {
-  const ThreeInOne({super.key,});
+class ThreeInOne extends StatelessWidget {
+   ThreeInOne({
+    super.key,
+  });
 
-  @override
-  State<ThreeInOne> createState() => _ThreeInOneState();
-}
-
-class _ThreeInOneState extends State<ThreeInOne> {
-  int selectedIndex = 1;
-
-  List<Widget> widgetOptions = [    ReportScreen(),    const HomeScreen(),    SettingsScreen(),  ];
-
-  void onItemTapped(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-  }
+  // int selectedIndex = 1;
+  List<Widget> widgetOptions = [
+    const ReportScreen(),
+    const HomeScreen(),
+    const SettingsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
+   int selectedIndex= Provider.of<BottomNavigationBarProvider>(context).selectedIndex;
     return SafeArea(
       child: Scaffold(
-        body: Stack(
-          children: widgetOptions
-              .asMap()
-              .map(
-                (index, page) => MapEntry(
-                  index,
-                  Offstage(
-                    offstage: selectedIndex != index,
-                    child: page,
-                  ),
-                ),
-              )
-              .values
-              .toList(),
-        ),
+        body: widgetOptions.elementAt(selectedIndex),
         bottomNavigationBar: Container(
           decoration: const BoxDecoration(
             border: Border(
@@ -74,7 +55,7 @@ class _ThreeInOneState extends State<ThreeInOne> {
             ],
             currentIndex: selectedIndex,
             selectedItemColor: const Color.fromARGB(255, 119, 116, 116),
-            onTap: onItemTapped,
+            onTap: Provider.of<BottomNavigationBarProvider>(context,listen: false).onItemTapped,
           ),
         ),
       ),
