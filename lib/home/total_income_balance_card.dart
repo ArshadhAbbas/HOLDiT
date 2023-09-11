@@ -46,7 +46,6 @@ class IncomeExpenseCard extends StatelessWidget {
                         color: Color.fromARGB(255, 134, 127, 127),
                       ),
                       SizedBox(
-                        width: 100,
                         child: Text(
                           "- ₹ $expenses",
                           style: const TextStyle(
@@ -73,7 +72,6 @@ class IncomeExpenseCard extends StatelessWidget {
                         color: Color.fromARGB(255, 134, 127, 127),
                       ),
                       SizedBox(
-                        width: 100,
                         child: Text(
                           "₹ $balance",
                           style: const TextStyle(
@@ -100,7 +98,6 @@ class IncomeExpenseCard extends StatelessWidget {
                         color: Color.fromARGB(255, 134, 127, 127),
                       ),
                       SizedBox(
-                        width: 100,
                         child: Text(
                           " + ₹ $income",
                           style: const TextStyle(
