@@ -4,7 +4,6 @@ import 'package:holdit/providers/add_item_screen_provider.dart';
 import 'package:holdit/providers/add_new_category_provider.dart';
 import 'package:holdit/providers/bottom_nav_bar_provider.dart';
 import 'package:holdit/providers/category_selection_dropdown_provider.dart';
-import 'package:holdit/providers/faq_provider.dart';
 import 'package:holdit/providers/month_picker_provider.dart';
 import 'package:holdit/providers/radio_button_provider.dart';
 import 'package:holdit/providers/search_screen_provider.dart';
@@ -67,9 +66,6 @@ class Holdit extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => RadioButtonsProvider(),
         ),
-        ChangeNotifierProvider(
-          create: (context) => FAQProvider(),
-        )
       ],
       child: MaterialApp(
           debugShowCheckedModeBanner: false,

@@ -22,7 +22,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: ' HOLDiT',
         text: 'HOLDiT : Balancing your money',
         linkUrl:
-            'https://play.google.com/store/apps/details?id=in.dart.holdit');
+            'https://play.google.com/store/apps/details?id=in.itsarshadh.holdit&pcampaignid=web_share'
+            '');
   }
 
   @override
@@ -44,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FaQ()),
+                  MaterialPageRoute(builder: (context) =>  FaQ()),
                 );
               },
               leading: const Icon(Icons.quiz_outlined),
@@ -66,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               onTap: (() async {
-                const url = 'mailto:arshadhp98@gmail.com';
+                const url = 'mailto:itsarshadh@gmail.com';
                 Uri uri = Uri.parse(url);
                 await launchUrl(uri);
               }),

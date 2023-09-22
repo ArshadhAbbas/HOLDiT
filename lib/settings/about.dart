@@ -19,7 +19,7 @@ class AboutScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text("HOLDiT v1.0.0"),
+            const Text("HOLDiT v1.0.1"),
             const SizedBox(
               height: 20,
             ),

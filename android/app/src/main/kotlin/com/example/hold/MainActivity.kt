@@ -1,4 +1,4 @@
-package com.example.hold
+package com.example.holditapp
 
 import io.flutter.embedding.android.FlutterActivity
 
